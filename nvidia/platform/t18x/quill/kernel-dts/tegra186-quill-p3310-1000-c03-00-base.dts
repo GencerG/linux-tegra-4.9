@@ -189,7 +189,7 @@
 	spi@3240000 {
 		status = "okay";
 		spi-max-frequency = <2000000>;
-		spi-mcp251x_0@0 {
+		can@0 {
 			status = "okay";
 			compatible = "microchip,mcp2515";
 			reg = <0>; /* spi chip select 0 */
