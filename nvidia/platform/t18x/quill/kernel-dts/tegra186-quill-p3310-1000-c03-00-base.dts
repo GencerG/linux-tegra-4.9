@@ -15,6 +15,7 @@
 
 #include "tegra186-quill-p3310-1000-a00-00-base.dts"
 #include <dt-bindings/gpio/tegra186-gpio.h>
+#define DAXC03_INT  TEGRA_AON_GPIO(S, 3)
 / {
 	nvidia,dtsfilename = __FILE__;
 	nvidia,dtbbuildtime = __DATE__, __TIME__;
@@ -180,23 +181,47 @@
 		};
 	};
 
-	mcp2515_clock: mcp2515_clock {
-		compatible = "fixed-clock";
-		#clock-cells = <0>;
-		clock-frequency = <16000000>;
-	};
-	
-	spi@3240000 {
-		status = "okay";
-		spi-max-frequency = <2000000>;
-		can@0 {
-			status = "okay";
-			compatible = "microchip,mcp2515";
-			reg = <0>; /* spi chip select 0 */
-			interrupt-parent = <&tegra_main_gpio>;
-			interrupts = <TEGRA_MAIN_GPIO(I, 4) 0x01>; /* GPIO_PI4 */
-			clocks = <&mcp2515_clock>;
-			spi-max-frequency = <2000000>;
+	clocks {
+		/* 16MHz external crystal oscillator */
+		clk16m: mcp251x_osc {
+			#clock-cells = <0>;
+			compatible = "fixed-clock";
+			clock-frequency = <16000000>;
 		};
 	};
+
+	tegra_aon_gpio: gpio@c2f0000 {
+         daxc03_int_b {
+            gpio-hog;
+            input;
+			gpios = <DAXC03_INT 0>;
+            label = "daxc03_int";
+         };
+	};
+
+	spi@3240000 {
+            status = "okay";
+		spi-max-frequency = <2000000>;
+
+		spi-touch-sharp19x12@0 {
+			status = "disabled";
+		};
+
+		can@0 {
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+			compatible = "microchip,mcp2515";
+			reg = <0x0>;
+
+			clocks = <&clk16m>;
+			interrupt-parent = <&tegra_aon_gpio>;
+			interrupts = <DAXC03_INT IRQ_TYPE_EDGE_FALLING>;
+			spi-max-frequency = <2000000>;
+
+			vdd-supply = <&spmic_ldo5>;
+			xceiver-supply = <&spmic_ldo5>;
+		};
+    };
+};
+
 };
