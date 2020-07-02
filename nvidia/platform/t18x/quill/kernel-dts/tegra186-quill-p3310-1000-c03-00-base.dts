@@ -14,7 +14,7 @@
  */
 
 #include "tegra186-quill-p3310-1000-a00-00-base.dts"
-#define DAXC03_INT  TEGRA_AON_GPIO(AA, 2)
+#define DAXC03_INT  TEGRA_AON_GPIO(PB, 4)
 
 / {
 	nvidia,dtsfilename = __FILE__;
