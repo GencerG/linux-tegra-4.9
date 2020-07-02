@@ -14,8 +14,8 @@
  */
 
 #include "tegra186-quill-p3310-1000-a00-00-base.dts"
-#include <dt-bindings/gpio/tegra186-gpio.h>
-#define DAXC03_INT  TEGRA_AON_GPIO(S, 3)
+#define DAXC03_INT  TEGRA_AON_GPIO(AA, 2)
+
 / {
 	nvidia,dtsfilename = __FILE__;
 	nvidia,dtbbuildtime = __DATE__, __TIME__;
@@ -55,7 +55,7 @@
 		nvidia,cd-wakeup-capable;
 	};
 
-	i2c@3160000 {
+	hdr40_i2c0: i2c@3160000 {
 		ina3221x@40 {
 			channel@0 {
 				ti,shunt-resistor-mohm = <10>;
@@ -78,7 +78,7 @@
 		};
 	};
 
-	i2c@c240000 {
+	hdr40_i2c1: i2c@c240000 {
 		bmi160@69 {
 			compatible = "bmi,bmi160";
 			reg = <0x69>;
@@ -124,16 +124,22 @@
 	};
 
         xhci@3530000 {
-		phys = <&tegra_xusb_padctl TEGRA_PADCTL_PHY_UTMI_P(0)>,
-			<&tegra_xusb_padctl TEGRA_PADCTL_PHY_UTMI_P(1)>,
-			<&tegra_xusb_padctl TEGRA_PADCTL_PHY_USB3_P(0)>;
-		phy-names = "utmi-0", "utmi-1", "usb3-0";
+		phys = <&{/xusb_padctl@3520000/pads/usb2/lanes/usb2-0}>,
+			<&{/xusb_padctl@3520000/pads/usb2/lanes/usb2-1}>,
+			<&{/xusb_padctl@3520000/pads/usb2/lanes/usb2-2}>,
+			<&{/xusb_padctl@3520000/pads/usb3/lanes/usb3-0}>;
+		phy-names = "usb2-0", "usb2-1", "usb2-2", "usb3-0";
+		nvidia,boost_cpu_freq = <1200>;
 	};
 
-	pinctrl@3520000 {
-		pinmux {
-			usb3-std-A-port2 {
-				nvidia,lanes = "usb3-0";
+	xusb_padctl@3520000 {
+		ports {
+			usb3-1 {
+				status = "disabled";
+			};
+			usb3-0 {
+				nvidia,usb2-companion = <1>;
+				status = "okay";
 			};
 		};
 	};
@@ -181,12 +187,16 @@
 		};
 	};
 
+	sound {
+		hdr40_snd_link_i2s: nvidia,dai-link-1 { };
+	};
+
 	clocks {
 		/* 16MHz external crystal oscillator */
 		clk16m: mcp251x_osc {
 			#clock-cells = <0>;
 			compatible = "fixed-clock";
-			clock-frequency = <16000000>;
+			clock-frequency = <8000000>;
 		};
 	};
 
@@ -194,13 +204,15 @@
          daxc03_int_b {
             gpio-hog;
             input;
-			gpios = <DAXC03_INT 0>;
+	    gpios = <DAXC03_INT 0>;
             label = "daxc03_int";
          };
 	};
 
-	spi@3240000 {
-            status = "okay";
+    /* J23 Expansion Connector SPI0 */
+    /* Note the difference in numbering between the connector and device */
+    spi@3240000 {
+	status = "okay";
 		spi-max-frequency = <2000000>;
 
 		spi-touch-sharp19x12@0 {
@@ -222,4 +234,5 @@
 			xceiver-supply = <&spmic_ldo5>;
 		};
     };
+
 };
